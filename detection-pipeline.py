@@ -42,7 +42,6 @@ RESOURCES_VIDEOS_DIR_NAME = "videos"
 RESOURCES_SO_DIR_NAME = "so"
 RESOURCES_PATH_KEY = "resources_path"
 HAILO_ARCH_KEY = "hailo_arch"
-TAPPAS_POSTPROC_PATH_KEY = "tappas_postproc_path"
 
 SIMPLE_DETECTION_APP_TITLE = "Hailo Simple Detection App"
 SIMPLE_DETECTION_PIPELINE = "simple_detection"
@@ -148,35 +147,6 @@ def get_resource_path(pipeline_name: str, resource_type: str, model: str | None 
         return (root / RESOURCES_MODELS_DIR_NAME / arch / model_name).with_suffix(HAILO_FILE_EXTENSION)
 
     raise ValueError(f"Unsupported resource type '{resource_type}'.")
-
-
-def _detect_tappas_postproc_dir() -> Path | None:
-    try:
-        output = subprocess.check_output(
-            ["pkg-config", "--variable=tappas_postproc_lib_dir", "hailo-tappas-core"],
-            text=True,
-        ).strip()
-        if output:
-            return Path(output)
-    except (subprocess.CalledProcessError, FileNotFoundError, PermissionError):
-        return None
-    return None
-
-
-def resolve_tappas_postproc_dir() -> Path:
-    env_override = os.environ.get(TAPPAS_POSTPROC_PATH_KEY)
-    if env_override:
-        return Path(env_override)
-    detected = _detect_tappas_postproc_dir()
-    if detected:
-        return detected
-    default_candidate = Path("/usr/lib/hailo/tappas_post_process")
-    if default_candidate.exists():
-        return default_candidate
-    raise RuntimeError(
-        "TAPPAS post-process directory not found. Set the "
-        f"{TAPPAS_POSTPROC_PATH_KEY} environment variable or install hailo-tappas-core."
-    )
 
 
 def get_usb_video_devices() -> list[str]:
