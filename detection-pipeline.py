@@ -94,7 +94,7 @@ def get_default_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--arch",
         default=None,
-        choices=[HAILO8_ARCH, HAILO8L_ARCH, HAILO10H_ARCH],
+        choices=["hailo8", "hailo8l"],
         help="Specify the Hailo architecture. Auto-detect when omitted.",
     )
     parser.add_argument("--hef-path", default=None, help="Path to HEF file.")
