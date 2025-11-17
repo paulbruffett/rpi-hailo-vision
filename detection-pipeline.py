@@ -456,7 +456,6 @@ class GStreamerApp:
         self.options_menu = args.parse_args()
         signal.signal(signal.SIGINT, self.shutdown)
 
-        self.postprocess_dir = resolve_tappas_postproc_dir()
         if self.options_menu.input is None:
             self.video_source = str(_get_resource_root() / RESOURCES_VIDEOS_DIR_NAME / BASIC_PIPELINES_VIDEO_EXAMPLE_NAME)
         else:
