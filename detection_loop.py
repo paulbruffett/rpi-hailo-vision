@@ -155,7 +155,15 @@ def _hailo_meta_to_detections(buffer) -> list[Detection]:
 def _generic_meta_to_detections(buffer) -> list[Detection]:
     """Fallback path that walks any attached GstMeta looking for detection-like objects."""
     detections: list[Detection] = []
-    meta_iter = buffer.iterate_meta()
+    # Some GI builds expose iterate_meta as an instance method, others as a
+    # module-level helper. If neither is present we bail out quietly.
+    if hasattr(buffer, "iterate_meta"):
+        meta_iter = buffer.iterate_meta()
+    elif hasattr(Gst, "buffer_iterate_meta"):  # pragma: no cover - platform dependent
+        meta_iter = Gst.buffer_iterate_meta(buffer)
+    else:
+        return detections
+
     while True:
         result, meta = meta_iter.next()
         if result != Gst.IteratorResult.OK:
@@ -192,9 +200,13 @@ def detection_callback(pad, info, user_data: DetectionResults):
     if buffer is None:
         return Gst.PadProbeReturn.OK
 
-    detections = extract_detections_from_buffer(buffer)
-    if detections:
-        user_data.push(detections)
+    try:
+        detections = extract_detections_from_buffer(buffer)
+        if detections:
+            user_data.push(detections)
+    except Exception as exc:  # pragma: no cover - defensive
+        # Do not tear down the pipeline if metadata parsing changes.
+        print(f"Detection parsing error: {exc}")
     return Gst.PadProbeReturn.OK
 
 
